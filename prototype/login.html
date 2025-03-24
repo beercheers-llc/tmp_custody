@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金型管理システム - ログイン</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-gray-800">金型管理システム</h1>
+            <p class="text-gray-600">大型・重量物の預かり・管理システム</p>
+        </div>
+        
+        <form>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
+                    ユーザー名
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" type="text" placeholder="ユーザー名を入力">
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
+                    パスワード
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="password" type="password" placeholder="パスワードを入力">
+                <p class="text-right mt-1">
+                    <a href="#" class="text-sm text-blue-500 hover:text-blue-700">パスワードをお忘れですか？</a>
+                </p>
+            </div>
+            
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="remember-me" class="ml-2 block text-sm text-gray-900">
+                        ログイン状態を保持する
+                    </label>
+                </div>
+                <a href="dashboard.html" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    ログイン
+                </a>
+            </div>
+        </form>
+        
+        <div class="mt-8 text-center">
+            <p class="text-sm text-gray-600">
+                ユーザータイプ: 
+                <a href="dashboard.html" class="text-blue-500 hover:text-blue-700">管理者</a> | 
+                <a href="dashboard.html" class="text-blue-500 hover:text-blue-700">倉庫担当者</a> | 
+                <a href="customer-dashboard.html" class="text-blue-500 hover:text-blue-700">顧客</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

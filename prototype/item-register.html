@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金型管理システム - 物品登録</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .sidebar {
+            transition: width 0.3s ease;
+        }
+        .sidebar.collapsed {
+            width: 4rem;
+        }
+        .sidebar.collapsed .menu-text {
+            display: none;
+        }
+        .sidebar.collapsed .menu-title {
+            display: none;
+        }
+        .content-wrapper {
+            transition: margin-left 0.3s ease;
+        }
+        /* 管理者テーマカラー */
+        .admin-theme {
+            --primary-color: #059669; /* 緑 */
+            --primary-hover: #047857; /* 濃い緑 */
+            --secondary-bg: #ecfdf5; /* 薄い緑 */
+            --accent-color: #10b981; /* 明るい緑 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 admin-theme">
+    <div class="min-h-screen flex flex-col">
+        <!-- ヘッダー -->
+        <header class="bg-green-600 shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-white">金型管理システム</h1>
+                </div>
+                <div class="flex items-center">
+                    <span class="mr-4 text-white">管理者様</span>
+                    <a href="login.html" class="text-white hover:text-green-200">
+                        <i class="fas fa-sign-out-alt"></i> ログアウト
+                    </a>
+                </div>
+            </div>
+        </header>
+        
+        <!-- メインコンテンツ -->
+        <main class="flex-grow flex">
+            <!-- サイドバー -->
+            <div id="sidebar" class="sidebar bg-green-800 shadow-md w-64">
+                <div class="p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-white menu-title">メニュー</h3>
+                        <button id="toggleSidebar" class="text-white hover:text-green-200 focus:outline-none">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="dashboard.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-home w-6"></i>
+                                <span class="menu-text">ダッシュボード</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="items-list.html" class="flex items-center p-2 text-white bg-green-700 rounded">
+                                <i class="fas fa-box w-6"></i>
+                                <span class="menu-text">物品管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="warehouse-map.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-warehouse w-6"></i>
+                                <span class="menu-text">保管場所管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="incoming-list.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-arrow-right-to-bracket w-6"></i>
+                                <span class="menu-text">入庫管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="outgoing-list.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-arrow-right-from-bracket w-6"></i>
+                                <span class="menu-text">出庫管理</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- メインコンテンツエリア -->
+            <div id="content" class="content-wrapper flex-1">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <!-- ページタイトル -->
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">物品登録</h2>
+                    <p class="text-gray-600">新しい物品を登録します</p>
+                </div>
+                
+                <!-- 登録フォーム -->
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <form>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- 物品情報 -->
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800 mb-4">物品情報</h3>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="item-size-width">
+                                        物品サイズ（cm）
+                                    </label>
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <div>
+                                            <label class="block text-gray-700 text-xs mb-1" for="item-size-width">
+                                                幅
+                                            </label>
+                                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="item-size-width" type="number" placeholder="幅">
+                                        </div>
+                                        <div>
+                                            <label class="block text-gray-700 text-xs mb-1" for="item-size-height">
+                                                高さ
+                                            </label>
+                                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="item-size-height" type="number" placeholder="高さ">
+                                        </div>
+                                        <div>
+                                            <label class="block text-gray-700 text-xs mb-1" for="item-size-length">
+                                                長さ
+                                            </label>
+                                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="item-size-length" type="number" placeholder="長さ">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="item-quantity">
+                                        数量
+                                    </label>
+                                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="item-quantity" type="number" placeholder="数量">
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="start-date">
+                                        預かり開始日
+                                    </label>
+                                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="start-date" type="date">
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="end-date">
+                                        預かり終了予定日
+                                    </label>
+                                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="end-date" type="date">
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="outgoing-date">
+                                        出庫予定日
+                                    </label>
+                                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="outgoing-date" type="date">
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="item-notes">
+                                        備考
+                                    </label>
+                                    <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="item-notes" rows="3" placeholder="特記事項（例: 破損リスク、要注意物品など）"></textarea>
+                                </div>
+                            </div>
+                            
+                            <!-- 所有者情報と保管場所 -->
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800 mb-4">所有者情報</h3>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="owner-company">
+                                        依頼元企業
+                                    </label>
+                                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="owner-company" type="text" placeholder="企業名">
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="owner-name">
+                                        担当者名
+                                    </label>
+                                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="owner-name" type="text" placeholder="担当者名">
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="owner-email">
+                                        メールアドレス
+                                    </label>
+                                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="owner-email" type="email" placeholder="メールアドレス">
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="owner-phone">
+                                        電話番号
+                                    </label>
+                                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="owner-phone" type="tel" placeholder="電話番号">
+                                </div>
+                                
+                                <h3 class="text-lg font-bold text-gray-800 mb-4 mt-8">保管場所</h3>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="storage-allocation">
+                                        保管場所割り当て方法
+                                    </label>
+                                    <div class="flex items-center mb-2">
+                                        <input id="auto-allocation" name="storage-allocation" type="radio" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" checked>
+                                        <label for="auto-allocation" class="ml-2 block text-sm text-gray-900">
+                                            自動割り当て
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input id="manual-allocation" name="storage-allocation" type="radio" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                        <label for="manual-allocation" class="ml-2 block text-sm text-gray-900">
+                                            手動割り当て
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="storage-area">
+                                        保管エリア（手動割り当て時）
+                                    </label>
+                                    <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="storage-area" disabled>
+                                        <option value="">エリアを選択</option>
+                                        <option value="A">Aエリア</option>
+                                        <option value="B">Bエリア</option>
+                                        <option value="C">Cエリア</option>
+                                        <option value="D">Dエリア</option>
+                                        <option value="E">Eエリア</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="storage-location">
+                                        具体的な場所（手動割り当て時）
+                                    </label>
+                                    <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="storage-location" disabled>
+                                        <option value="">場所を選択</option>
+                                        <option value="01">01</option>
+                                        <option value="02">02</option>
+                                        <option value="03">03</option>
+                                        <option value="04">04</option>
+                                        <option value="05">05</option>
+                                        <option value="06">06</option>
+                                        <option value="07">07</option>
+                                        <option value="08">08</option>
+                                        <option value="09">09</option>
+                                        <option value="10">10</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 写真アップロード -->
+                        <div class="mt-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">写真アップロード（任意）</h3>
+                            <div class="flex items-center justify-center w-full">
+                                <label for="item-photo" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <i class="fas fa-cloud-upload-alt text-gray-400 text-3xl mb-2"></i>
+                                        <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">クリックしてアップロード</span> またはドラッグ＆ドロップ</p>
+                                        <p class="text-xs text-gray-500">PNG, JPG, GIF (最大 10MB)</p>
+                                    </div>
+                                    <input id="item-photo" type="file" class="hidden" accept="image/*" multiple />
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- 操作ボタン -->
+                        <div class="mt-8 flex justify-end space-x-4">
+                            <a href="items-list.html" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                                キャンセル
+                            </a>
+                            <a href="item-confirm.html" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                                登録
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- フッター -->
+        <footer class="bg-green-50 shadow-inner py-4">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <p class="text-center text-gray-600">
+                    &copy; 2025 金型管理システム All Rights Reserved.
+                </p>
+            </div>
+        </footer>
+    </div>
+    
+    <script>
+        // 手動割り当て/自動割り当ての切り替え
+        document.getElementById('auto-allocation').addEventListener('change', function() {
+            document.getElementById('storage-area').disabled = true;
+            document.getElementById('storage-location').disabled = true;
+        });
+        
+        document.getElementById('manual-allocation').addEventListener('change', function() {
+            document.getElementById('storage-area').disabled = false;
+            document.getElementById('storage-location').disabled = false;
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            const toggleSidebar = document.getElementById('toggleSidebar');
+            
+            toggleSidebar.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                if (sidebar.classList.contains('collapsed')) {
+                    content.style.marginLeft = '4rem';
+                } else {
+                    content.style.marginLeft = '0';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

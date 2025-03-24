@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倉庫マップ - 金型管理システム</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .sidebar {
+            transition: width 0.3s ease;
+        }
+        .sidebar.collapsed {
+            width: 4rem;
+        }
+        .sidebar.collapsed .menu-text {
+            display: none;
+        }
+        .sidebar.collapsed .menu-title {
+            display: none;
+        }
+        .content-wrapper {
+            transition: margin-left 0.3s ease;
+        }
+        /* 管理者テーマカラー */
+        .admin-theme {
+            --primary-color: #059669; /* 緑 */
+            --primary-hover: #047857; /* 濃い緑 */
+            --secondary-bg: #ecfdf5; /* 薄い緑 */
+            --accent-color: #10b981; /* 明るい緑 */
+        }
+        .warehouse-grid {
+            display: grid;
+            grid-template-columns: 40px repeat(100, minmax(60px, 1fr));
+            grid-template-rows: 40px repeat(10, 60px);
+            overflow-x: auto;
+        }
+        .cell {
+            border: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.75rem;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .cell:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        .cell-used {
+            border: 2px solid #3b82f6;
+        }
+        .cell-scheduled-in {
+            border: 2px solid #10b981;
+        }
+        .cell-scheduled-out {
+            border: 2px solid #f59e0b;
+        }
+        .cell-aisle {
+            background-color: #f3f4f6;
+            cursor: default;
+        }
+        .area-A { background-color: rgba(147, 197, 253, 0.2); }
+        .area-B { background-color: rgba(134, 239, 172, 0.2); }
+        .area-C { background-color: rgba(196, 181, 253, 0.2); }
+        .area-D { background-color: rgba(252, 211, 77, 0.2); }
+        .area-E { background-color: rgba(248, 113, 113, 0.2); }
+        .area-F { background-color: rgba(96, 165, 250, 0.2); }
+        .area-G { background-color: rgba(74, 222, 128, 0.2); }
+        .area-H { background-color: rgba(167, 139, 250, 0.2); }
+        .area-I { background-color: rgba(251, 191, 36, 0.2); }
+        .area-J { background-color: rgba(236, 72, 153, 0.2); }
+        .area-K { background-color: rgba(20, 184, 166, 0.2); }
+        .area-L { background-color: rgba(249, 115, 22, 0.2); }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 50;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 1000px;
+        }
+        .shelf-floor {
+            height: 50px;
+            background-color: #e5e7eb;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .shelf-level {
+            height: 40px;
+            background-color: #e5e7eb;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .shelf-level-used {
+            background-color: #93c5fd;
+        }
+        .shelf-level-empty {
+            background-color: #e5e7eb;
+        }
+        .shelf-level-scheduled-in {
+            background-color: #86efac;
+        }
+        .shelf-level-scheduled-out {
+            background-color: #fcd34d;
+        }
+        .header-cell {
+            background-color: #f3f4f6;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #e5e7eb;
+        }
+        .corner-cell {
+            background-color: #f3f4f6;
+            border: 1px solid #e5e7eb;
+        }
+        /* 検索結果のハイライト */
+        .search-highlight {
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.5);
+            z-index: 10;
+            transform: scale(1.05);
+            transition: all 0.2s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 admin-theme">
+    <div class="min-h-screen flex flex-col">
+        <!-- ヘッダー -->
+        <header class="bg-green-600 shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-white">金型管理システム</h1>
+                </div>
+                <div class="flex items-center">
+                    <span class="mr-4 text-white">管理者様</span>
+                    <a href="login.html" class="text-white hover:text-green-200">
+                        <i class="fas fa-sign-out-alt"></i> ログアウト
+                    </a>
+                </div>
+            </div>
+        </header>
+        
+        <!-- メインコンテンツ -->
+        <main class="flex-grow flex">
+            <!-- サイドバー -->
+            <div id="sidebar" class="sidebar bg-green-800 shadow-md w-64">
+                <div class="p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-white menu-title">メニュー</h3>
+                        <button id="toggleSidebar" class="text-white hover:text-green-200 focus:outline-none">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="dashboard.html" class="flex items-center p-2 text-white hover:bg-green-700 rounded">
+                                <i class="fas fa-home w-6"></i>
+                                <span class="menu-text">ダッシュボード</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="items-list.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-box w-6"></i>
+                                <span class="menu-text">物品管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="warehouse-map.html" class="flex items-center p-2 text-green-100 bg-green-700 rounded">
+                                <i class="fas fa-warehouse w-6"></i>
+                                <span class="menu-text">保管場所管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="incoming-list.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-arrow-right-to-bracket w-6"></i>
+                                <span class="menu-text">入庫管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="outgoing-list.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-arrow-right-from-bracket w-6"></i>
+                                <span class="menu-text">出庫管理</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- メインコンテンツエリア -->
+            <div id="content" class="content-wrapper flex-1">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <!-- ページタイトル -->
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">倉庫マップ</h2>
+                        <p class="text-gray-600">倉庫内の物品配置状況を確認できます</p>
+                    </div>
+                    
+                    <!-- 検索機能 -->
+                    <div class="bg-white p-4 mb-6 rounded-lg shadow">
+                        <div class="flex flex-col md:flex-row md:items-center gap-4">
+                            <!-- 基本検索 -->
+                            <div class="flex-grow">
+                                <div class="relative">
+                                    <input type="text" id="searchInput" placeholder="物品ID・名称、顧客名などで検索" 
+                                           class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                        <i class="fas fa-search"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- エリア選択 -->
+                            <div class="w-full md:w-48">
+                                <select id="areaFilter" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    <option value="">全エリア</option>
+                                    <option value="A">Aエリア</option>
+                                    <option value="B">Bエリア</option>
+                                    <option value="C">Cエリア</option>
+                                    <option value="D">Dエリア</option>
+                                    <option value="E">Eエリア</option>
+                                    <option value="F">Fエリア</option>
+                                </select>
+                            </div>
+                            
+                            <!-- 検索ボタン -->
+                            <div>
+                                <button id="searchButton" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                                    検索
+                                </button>
+                            </div>
+                            
+                            <!-- 詳細検索トグル -->
+                            <div>
+                                <button id="toggleAdvancedSearch" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg">
+                                    <i class="fas fa-filter mr-1"></i> 詳細検索
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- 詳細検索パネル（初期状態では非表示） -->
+                        <div id="advancedSearchPanel" class="mt-4 pt-4 border-t hidden">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <!-- 状態フィルター -->
+                                <div>
+                                    <h4 class="font-medium mb-2">状態</h4>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center">
+                                            <input type="checkbox" class="mr-2 statusFilter" value="empty"> 空き
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" class="mr-2 statusFilter" value="used"> 使用中
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" class="mr-2 statusFilter" value="scheduled-in"> 入庫予定
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" class="mr-2 statusFilter" value="scheduled-out"> 出庫予定
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- 保管タイプフィルター -->
+                                <div>
+                                    <h4 class="font-medium mb-2">保管タイプ</h4>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center">
+                                            <input type="checkbox" class="mr-2 shelfTypeFilter" value="floor"> 平面
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" class="mr-2 shelfTypeFilter" value="shelf2"> 2階棚
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" class="mr-2 shelfTypeFilter" value="shelf3"> 3階棚
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- 日付フィルター -->
+                                <div>
+                                    <h4 class="font-medium mb-2">日付</h4>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-sm mb-1">入庫日（開始）</label>
+                                            <input type="date" id="inDateStart" class="w-full p-2 border rounded">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm mb-1">入庫日（終了）</label>
+                                            <input type="date" id="inDateEnd" class="w-full p-2 border rounded">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- フィルターボタン -->
+                            <div class="mt-4 flex justify-end gap-2">
+                                <button id="resetFilters" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded">
+                                    リセット
+                                </button>
+                                <button id="applyFilters" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                                    適用
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- 検索結果カウンター（検索実行後に表示） -->
+                        <div id="searchResultsCounter" class="mt-4 hidden">
+                            <p class="text-gray-600">検索結果: <span id="resultsCount">0</span>件</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 凡例 -->
+                    <div class="bg-white p-4 mb-6 rounded-lg shadow">
+                        <h2 class="text-lg font-semibold mb-3">凡例</h2>
+                        <div class="flex flex-wrap gap-4">
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 bg-gray-200 mr-2"></div>
+                                <span>通路</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 border-2 border-blue-500 mr-2"></div>
+                                <span>使用中</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 border-2 border-green-500 mr-2"></div>
+                                <span>入庫予定</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 border-2 border-yellow-500 mr-2"></div>
+                                <span>出庫予定</span>
+                            </div>
+                            <!-- 他のエリアも同様に表示 -->
+                        </div>
+                    </div>
+
+                    <!-- 倉庫マップ -->
+                    <div class="bg-white p-4 mb-6 rounded-lg shadow overflow-x-auto">
+                        <h2 class="text-lg font-semibold mb-3">倉庫マップ</h2>
+                        <div class="warehouse-grid" id="warehouseGrid">
+                            <!-- JavaScriptで動的に生成 -->
+                        </div>
+                    </div>
+
+                    <!-- 使用状況統計 -->
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- エリア別使用率 -->
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <h2 class="text-lg font-semibold mb-3">エリア別使用率</h2>
+                            <div class="space-y-4" id="areaUsage">
+                                <!-- JavaScriptで動的に生成 -->
+                            </div>
+                        </div>
+
+                        <!-- 統計情報 -->
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <h2 class="text-lg font-semibold mb-3">統計情報</h2>
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <p class="text-gray-600">総スペース数</p>
+                        <p class="text-xl font-semibold" id="totalSpaces">0</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">使用中スペース数</p>
+                        <p class="text-xl font-semibold" id="usedSpaces">0</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">入庫予定スペース数</p>
+                        <p class="text-xl font-semibold" id="scheduledIn">0</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">出庫予定スペース数</p>
+                        <p class="text-xl font-semibold" id="scheduledOut">0</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">空きスペース数</p>
+                        <p class="text-xl font-semibold" id="availableSpaces">0</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">全体使用率</p>
+                        <p class="text-xl font-semibold" id="usageRate">0%</p>
+                    </div>
+                </div>
+
+                <h3 class="font-semibold mb-2">全体使用率</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="totalUsageBar" style="width: 0%"></div>
+                </div>
+
+                <h3 class="font-semibold mt-4 mb-2">棚タイプ別使用率</h3>
+                <div class="space-y-3" id="shelfTypeUsage">
+                    <!-- JavaScriptで動的に生成 -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- フッター -->
+    <footer class="bg-gray-800 text-white py-4">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; 2025 金型管理システム. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- セル詳細モーダル -->
+    <div id="cellModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold" id="modalTitle">セル詳細</h2>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-2 gap-8">
+                <!-- 左側：セル情報と立面図 -->
+                <div>
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <p class="text-gray-600">セルID</p>
+                            <p class="font-semibold" id="modalCellId">-</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">エリア情報</p>
+                            <p class="font-semibold" id="modalArea">-</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">棚タイプ</p>
+                            <p class="font-semibold" id="modalShelfType">-</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">状態</p>
+                            <p class="font-semibold" id="modalStatus">-</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">使用率</p>
+                            <p class="font-semibold" id="modalUsageRate">-</p>
+                        </div>
+                    </div>
+                    <h3 class="font-semibold mb-3">立面図</h3>
+                    <div class="mb-3 flex flex-wrap gap-4">
+                        <div class="flex items-center">
+                            <div class="w-6 h-6 bg-gray-200 mr-2"></div>
+                            <span>空き</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-6 h-6 bg-blue-300 mr-2"></div>
+                            <span>使用中</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-6 h-6 bg-green-300 mr-2"></div>
+                            <span>入庫予定</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-6 h-6 bg-yellow-300 mr-2"></div>
+                            <span>出庫予定</span>
+                        </div>
+                    </div>
+                    <div id="modalShelfView" class="p-4 border rounded">
+                        <!-- JavaScriptで動的に生成 -->
+                    </div>
+                </div>
+                
+                <!-- 右側：顧客情報と預かり品情報 -->
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-semibold">使用情報</h3>
+                        <div id="shelfLevelTabs" class="flex space-x-2">
+                            <!-- JavaScriptで動的に生成 -->
+                        </div>
+                    </div>
+                    
+                    <div id="shelfLevelContent">
+                        <!-- JavaScriptで動的に生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // エリア定義
+        const areas = [
+            { id: 'A', name: 'Aエリア', range: 'A1:J3', color: '#93c5fd', shelfType: 'floor', startX: 0, endX: 9, startY: 0, endY: 2 },
+            { id: 'B', name: 'Bエリア', range: 'A4:J6', color: '#86efac', shelfType: 'shelf2', startX: 0, endX: 9, startY: 3, endY: 5 },
+            { id: 'C', name: 'Cエリア', range: 'A7:J10', color: '#c4b5fd', shelfType: 'shelf3', startX: 0, endX: 9, startY: 6, endY: 9 },
+            { id: 'D', name: 'Dエリア', range: 'K1:T10', color: '#fcd34d', shelfType: 'floor', startX: 10, endX: 19, startY: 0, endY: 9 },
+            { id: 'E', name: 'Eエリア', range: 'U1:AD10', color: '#f87171', shelfType: 'shelf2', startX: 20, endX: 29, startY: 0, endY: 9 },
+            { id: 'F', name: 'Fエリア', range: 'AE1:AN10', color: '#60a5fa', shelfType: 'shelf3', startX: 30, endX: 39, startY: 0, endY: 9 },
+            { id: 'G', name: 'Gエリア', range: 'AO1:AX10', color: '#4ade80', shelfType: 'floor', startX: 40, endX: 49, startY: 0, endY: 9 },
+            { id: 'H', name: 'Hエリア', range: 'AY1:BH10', color: '#a78bfa', shelfType: 'shelf2', startX: 50, endX: 59, startY: 0, endY: 9 },
+            { id: 'I', name: 'Iエリア', range: 'BI1:BR10', color: '#fbbf24', shelfType: 'shelf3', startX: 60, endX: 69, startY: 0, endY: 9 },
+            { id: 'J', name: 'Jエリア', range: 'BS1:CB10', color: '#ec4899', shelfType: 'floor', startX: 70, endX: 79, startY: 0, endY: 9 },
+            { id: 'K', name: 'Kエリア', range: 'CC1:CL10', color: '#14b8a6', shelfType: 'shelf2', startX: 80, endX: 89, startY: 0, endY: 9 },
+            { id: 'L', name: 'Lエリア', range: 'CM1:CV10', color: '#f97316', shelfType: 'shelf3', startX: 90, endX: 99, startY: 0, endY: 9 }
+        ];
+
+        // セルデータの生成（ダミーデータ）
+        function generateCells() {
+            const cells = [];
+            
+            for (let y = 0; y < 10; y++) {
+                for (let x = 0; x < 100; x++) {
+                    // 通路の設定
+                    if (y === 2 || y === 6 || x % 10 === 9) {
+                        cells.push({
+                            id: `${getColumnName(x)}${y + 1}`,
+                            name: `${getColumnName(x)}${y + 1}`,
+                            type: 'aisle',
+                            status: 'empty',
+                            usageRate: 0,
+                            position: { x, y },
+                            area: 'aisle'
+                        });
+                        continue;
+                    }
+                    
+                    // エリアの特定
+                    const area = areas.find(area => 
+                        x >= area.startX && x <= area.endX && 
+                        y >= area.startY && y <= area.endY
+                    );
+                    
+                    if (!area) continue;
+                    
+                    // ランダムな状態と使用率の生成
+                    const statuses = ['empty', 'used', 'scheduled-in', 'scheduled-out'];
+                    const randomStatus = Math.random() < 0.7 ? 'empty' : statuses[Math.floor(Math.random() * 4)];
+                    const randomUsage = randomStatus === 'empty' ? 0 : Math.floor(Math.random() * 100);
+                    
+                    cells.push({
+                        id: `${getColumnName(x)}${y + 1}`,
+                        name: `${getColumnName(x)}${y + 1}`,
+                        type: area.shelfType,
+                        status: randomStatus,
+                        usageRate: randomUsage,
+                        position: { x, y },
+                        area: area.id
+                    });
+                }
+            }
+            
+            return cells;
+        }
+        
+        // 列番号を列名に変換（A, B, ..., Z, AA, AB, ...）
+        function getColumnName(index) {
+            let columnName = '';
+            
+            if (index < 26) {
+                columnName = String.fromCharCode(65 + index);
+            } else {
+                const firstChar = String.fromCharCode(65 + Math.floor(index / 26) - 1);
+                const secondChar = String.fromCharCode(65 + (index % 26));
+                columnName = firstChar + secondChar;
+            }
+            
+            return columnName;
+        }
+        
+        // 倉庫マップの描画
+        function renderWarehouseMap(cells) {
+            const grid = document.getElementById('warehouseGrid');
+            grid.innerHTML = '';
+            
+            // コーナーセル（左上の空白セル）
+            const cornerCell = document.createElement('div');
+            cornerCell.className = 'corner-cell';
+            grid.appendChild(cornerCell);
+            
+            // 列ヘッダー（A, B, C, ...）
+            for (let x = 0; x < 100; x++) {
+                const headerCell = document.createElement('div');
+                headerCell.className = 'header-cell';
+                headerCell.textContent = getColumnName(x);
+                grid.appendChild(headerCell);
+            }
+            
+            // 各行の処理
+            for (let y = 0; y < 10; y++) {
+                // 行ヘッダー（1, 2, 3, ...）
+                const rowHeader = document.createElement('div');
+                rowHeader.className = 'header-cell';
+                rowHeader.textContent = (y + 1).toString();
+                grid.appendChild(rowHeader);
+                
+                // 各セルの処理
+                for (let x = 0; x < 100; x++) {
+                    const cellIndex = y * 100 + x;
+                    const cell = cells[cellIndex];
+                    
+                    const cellElement = document.createElement('div');
+                    cellElement.className = `cell ${cell.type === 'aisle' ? 'cell-aisle' : `area-${cell.area}`}`;
+                    
+                    if (cell.status === 'used') {
+                        cellElement.classList.add('cell-used');
+                    } else if (cell.status === 'scheduled-in') {
+                        cellElement.classList.add('cell-scheduled-in');
+                    } else if (cell.status === 'scheduled-out') {
+                        cellElement.classList.add('cell-scheduled-out');
+                    }
+                    
+                    if (cell.type !== 'aisle') {
+                        cellElement.innerHTML = `
+                            <div>${cell.name}</div>
+                            <div>${getShelfTypeName(cell.type)}</div>
+                            ${cell.status !== 'empty' ? `<div>${cell.usageRate}%</div>` : ''}
+                        `;
+                        
+                        cellElement.addEventListener('click', () => showCellDetails(cell));
+                    }
+                    
+                    grid.appendChild(cellElement);
+                }
+            }
+        }
+        
+        // 棚タイプ名の取得
+        function getShelfTypeName(type) {
+            switch (type) {
+                case 'floor': return '平面';
+                case 'shelf2': return '2階棚';
+                case 'shelf3': return '3階棚';
+                case 'aisle': return '通路';
+                default: return '';
+            }
+        }
+        
+        // 状態名の取得
+        function getStatusName(status) {
+            switch (status) {
+                case 'empty': return '空き';
+                case 'used': return '使用中';
+                case 'scheduled-in': return '入庫予定';
+                case 'scheduled-out': return '出庫予定';
+                default: return '';
+            }
+        }
+        
+        // 使用状況統計の計算と描画
+        function calculateAndRenderStatistics(cells) {
+            // 通路を除外したセル
+            const nonAisleCells = cells.filter(cell => cell.type !== 'aisle');
+            
+            // 全体統計
+            const totalSpaces = nonAisleCells.length;
+            const usedSpaces = nonAisleCells.filter(cell => cell.status === 'used').length;
+            const scheduledInSpaces = nonAisleCells.filter(cell => cell.status === 'scheduled-in').length;
+            const scheduledOutSpaces = nonAisleCells.filter(cell => cell.status === 'scheduled-out').length;
+            const availableSpaces = totalSpaces - usedSpaces - scheduledInSpaces - scheduledOutSpaces;
+            const usageRate = Math.round((usedSpaces / totalSpaces) * 100);
+            
+            // 統計情報の表示
+            document.getElementById('totalSpaces').textContent = totalSpaces;
+            document.getElementById('usedSpaces').textContent = usedSpaces;
+            document.getElementById('scheduledIn').textContent = scheduledInSpaces;
+            document.getElementById('scheduledOut').textContent = scheduledOutSpaces;
+            document.getElementById('availableSpaces').textContent = availableSpaces;
+            document.getElementById('usageRate').textContent = `${usageRate}%`;
+            document.getElementById('totalUsageBar').style.width = `${usageRate}%`;
+            
+            // エリア別使用率の計算と表示
+            const areaUsageElement = document.getElementById('areaUsage');
+            areaUsageElement.innerHTML = '';
+            
+            areas.forEach(area => {
+                const areaCells = nonAisleCells.filter(cell => cell.area === area.id);
+                const areaUsedCells = areaCells.filter(cell => cell.status === 'used');
+                const areaUsageRate = Math.round((areaUsedCells.length / areaCells.length) * 100);
+                
+                const areaElement = document.createElement('div');
+                areaElement.innerHTML = `
+                    <div class="flex justify-between mb-1">
+                        <span>${area.name} (${area.range})</span>
+                        <span>${getShelfTypeName(area.shelfType)}</span>
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                        <span>${areaUsedCells.length}/${areaCells.length}</span>
+                        <span>${areaUsageRate}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${areaUsageRate}%; background-color: ${area.color}"></div>
+                    </div>
+                `;
+                
+                areaUsageElement.appendChild(areaElement);
+            });
+            
+            // 棚タイプ別使用率の計算と表示
+            const shelfTypes = ['floor', 'shelf2', 'shelf3'];
+            const shelfTypeNames = {
+                'floor': '平面',
+                'shelf2': '2階棚',
+                'shelf3': '3階棚'
+            };
+            
+            const shelfTypeUsageElement = document.getElementById('shelfTypeUsage');
+            shelfTypeUsageElement.innerHTML = '';
+            
+            shelfTypes.forEach(type => {
+                const typeCells = nonAisleCells.filter(cell => cell.type === type);
+                const typeUsedCells = typeCells.filter(cell => cell.status === 'used');
+                const typeUsageRate = Math.round((typeUsedCells.length / typeCells.length) * 100);
+                
+                const typeElement = document.createElement('div');
+                typeElement.innerHTML = `
+                    <div class="flex justify-between mb-1">
+                        <span>${shelfTypeNames[type]}</span>
+                        <span>${typeUsedCells.length}/${typeCells.length}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${typeUsageRate}%"></div>
+                    </div>
+                `;
+                
+                shelfTypeUsageElement.appendChild(typeElement);
+            });
+        }
+        
+        // セル詳細の表示
+        function showCellDetails(cell) {
+            const modal = document.getElementById('cellModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalCellId = document.getElementById('modalCellId');
+            const modalArea = document.getElementById('modalArea');
+            const modalShelfType = document.getElementById('modalShelfType');
+            const modalStatus = document.getElementById('modalStatus');
+            const modalUsageRate = document.getElementById('modalUsageRate');
+            const modalShelfView = document.getElementById('modalShelfView');
+            const shelfLevelTabs = document.getElementById('shelfLevelTabs');
+            const shelfLevelContent = document.getElementById('shelfLevelContent');
+            
+            // エリア情報の取得
+            const area = areas.find(a => a.id === cell.area);
+            
+            modalTitle.textContent = `セル詳細: ${cell.name}`;
+            modalCellId.textContent = cell.id;
+            modalArea.textContent = `${area.name} (${area.range})`;
+            modalShelfType.textContent = getShelfTypeName(cell.type);
+            modalStatus.textContent = getStatusName(cell.status);
+            modalUsageRate.textContent = `${cell.usageRate}%`;
+            
+            // 立面図の描画
+            modalShelfView.innerHTML = '';
+            
+            // 棚レベルのタブとコンテンツをリセット
+            shelfLevelTabs.innerHTML = '';
+            shelfLevelContent.innerHTML = '';
+            
+            let levels = [];
+            
+            if (cell.type === 'floor') {
+                const floorElement = document.createElement('div');
+                floorElement.className = `shelf-floor shelf-level-${cell.status === 'empty' ? 'empty' : cell.status}`;
+                floorElement.textContent = '平面';
+                modalShelfView.appendChild(floorElement);
+                
+                if (cell.status !== 'empty') {
+                    levels.push({ level: '平面', status: cell.status });
+                }
+            } else if (cell.type === 'shelf2') {
+                // 2階棚の場合、使用率に応じて各階の状態を計算
+                const levelStatuses = calculateShelfLevels(cell, 2);
+                
+                for (let i = 2; i > 0; i--) {
+                    const levelStatus = levelStatuses[i-1];
+                    const levelElement = document.createElement('div');
+                    levelElement.className = `shelf-level shelf-level-${levelStatus}`;
+                    levelElement.textContent = `${i}階 (${getStatusName(levelStatus)})`;
+                    modalShelfView.appendChild(levelElement);
+                    
+                    if (levelStatus !== 'empty') {
+                        levels.push({ level: `${i}階`, status: levelStatus });
+                    }
+                }
+            } else if (cell.type === 'shelf3') {
+                // 3階棚の場合、使用率に応じて各階の状態を計算
+                const levelStatuses = calculateShelfLevels(cell, 3);
+                
+                for (let i = 3; i > 0; i--) {
+                    const levelStatus = levelStatuses[i-1];
+                    const levelElement = document.createElement('div');
+                    levelElement.className = `shelf-level shelf-level-${levelStatus}`;
+                    levelElement.textContent = `${i}階 (${getStatusName(levelStatus)})`;
+                    modalShelfView.appendChild(levelElement);
+                    
+                    if (levelStatus !== 'empty') {
+                        levels.push({ level: `${i}階`, status: levelStatus });
+                    }
+                }
+            }
+            
+            // 使用情報の表示
+            if (levels.length === 0) {
+                // 空きの場合
+                shelfLevelContent.innerHTML = `
+                    <div class="p-4 border rounded bg-gray-50">
+                        <p class="text-center text-gray-500">このセルは現在使用されていません。</p>
+                    </div>
+                `;
+            } else {
+                // 使用中の場合、タブを生成
+                levels.forEach((levelInfo, index) => {
+                    const tabButton = document.createElement('button');
+                    tabButton.className = `px-3 py-1 rounded ${index === 0 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`;
+                    tabButton.textContent = levelInfo.level;
+                    tabButton.dataset.level = levelInfo.level;
+                    tabButton.dataset.index = index;
+                    tabButton.addEventListener('click', (e) => {
+                        // タブ切り替え
+                        document.querySelectorAll('#shelfLevelTabs button').forEach(btn => {
+                            btn.className = 'px-3 py-1 rounded bg-gray-200 text-gray-700';
+                        });
+                        e.target.className = 'px-3 py-1 rounded bg-blue-500 text-white';
+                        
+                        // コンテンツ切り替え
+                        showLevelContent(e.target.dataset.level, levelInfo.status);
+                    });
+                    shelfLevelTabs.appendChild(tabButton);
+                });
+                
+                // 最初のタブのコンテンツを表示
+                showLevelContent(levels[0].level, levels[0].status);
+            }
+            
+            modal.style.display = 'block';
+        }
+        
+        // 棚レベルのコンテンツを表示
+        function showLevelContent(level, status) {
+            const shelfLevelContent = document.getElementById('shelfLevelContent');
+            
+            // ダミーデータからランダムに選択
+            const randomItemIndex = Math.floor(Math.random() * items.length);
+            const item = items[randomItemIndex];
+            const customer = customers.find(c => c.id === item.customer_id);
+            
+            shelfLevelContent.innerHTML = `
+                <div class="p-4 border rounded mb-4">
+                    <h4 class="font-semibold mb-2">顧客情報</h4>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <p class="text-gray-600">顧客名</p>
+                            <p class="font-semibold">${customer.name}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">担当者</p>
+                            <p class="font-semibold">${customer.contact}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">電話番号</p>
+                            <p class="font-semibold">${customer.phone}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">メールアドレス</p>
+                            <p class="font-semibold">${customer.email}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-4 border rounded">
+                    <h4 class="font-semibold mb-2">預かり品情報</h4>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <p class="text-gray-600">品名</p>
+                            <p class="font-semibold">${item.name}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">サイズ</p>
+                            <p class="font-semibold">${item.size}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">重量</p>
+                            <p class="font-semibold">${item.weight}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">状態</p>
+                            <p class="font-semibold">${getStatusName(item.status)}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // ダミーの顧客データ
+        const customers = [
+            { id: 1, name: '株式会社山田製作所', contact: '山田太郎', phone: '03-1234-5678', email: 'yamada@example.com' },
+            { id: 2, name: '鈴木金型工業', contact: '鈴木一郎', phone: '03-2345-6789', email: 'suzuki@example.com' },
+            { id: 3, name: '佐藤プレス株式会社', contact: '佐藤花子', phone: '03-3456-7890', email: 'sato@example.com' },
+            { id: 4, name: '田中精密工業', contact: '田中次郎', phone: '03-4567-8901', email: 'tanaka@example.com' },
+            { id: 5, name: '高橋金属工業', contact: '高橋三郎', phone: '03-5678-9012', email: 'takahashi@example.com' }
+        ];
+        
+        // ダミーの預かり品データ
+        const items = [
+            { id: 101, name: 'プレス金型A型', size: '1200×800×500', weight: '2.5t', customer_id: 1, status: 'used' },
+            { id: 102, name: '射出成形金型B型', size: '900×600×400', weight: '1.8t', customer_id: 2, status: 'used' },
+            { id: 103, name: 'ダイカスト金型C型', size: '1500×1000×600', weight: '3.2t', customer_id: 3, status: 'scheduled-in' },
+            { id: 104, name: 'プレス金型D型', size: '1100×700×450', weight: '2.1t', customer_id: 4, status: 'scheduled-out' },
+            { id: 105, name: '射出成形金型E型', size: '800×500×350', weight: '1.5t', customer_id: 5, status: 'used' },
+            { id: 106, name: 'ダイカスト金型F型', size: '1300×900×550', weight: '2.8t', customer_id: 1, status: 'used' },
+            { id: 107, name: 'プレス金型G型', size: '1000×650×400', weight: '1.9t', customer_id: 2, status: 'scheduled-in' },
+            { id: 108, name: '射出成形金型H型', size: '950×600×380', weight: '1.7t', customer_id: 3, status: 'used' },
+            { id: 109, name: 'ダイカスト金型I型', size: '1400×950×580', weight: '3.0t', customer_id: 4, status: 'used' },
+            { id: 110, name: 'プレス金型J型', size: '1050×680×420', weight: '2.0t', customer_id: 5, status: 'scheduled-out' }
+        ];
+        
+        // 棚の各階の状態を計算する関数
+        function calculateShelfLevels(cell, numLevels) {
+            const levels = [];
+            
+            if (cell.status === 'empty') {
+                // すべての階が空の場合
+                for (let i = 0; i < numLevels; i++) {
+                    levels.push('empty');
+                }
+            } else if (cell.status === 'used' || cell.status === 'scheduled-in' || cell.status === 'scheduled-out') {
+                // 使用率に応じて階の状態を決定
+                const usedLevels = Math.ceil((cell.usageRate / 100) * numLevels);
+                
+                for (let i = 0; i < numLevels; i++) {
+                    if (i < usedLevels) {
+                        levels.push(cell.status);
+                    } else {
+                        levels.push('empty');
+                    }
+                }
+            }
+            
+            return levels;
+        }
+        
+        // モーダルを閉じる
+        document.getElementById('closeModal').addEventListener('click', () => {
+            document.getElementById('cellModal').style.display = 'none';
+        });
+        
+        // モーダル外をクリックしたら閉じる
+        window.addEventListener('click', (event) => {
+            const modal = document.getElementById('cellModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+        
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            const cells = generateCells();
+            renderWarehouseMap(cells);
+            calculateAndRenderStatistics(cells);
+        });
+    </script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            const toggleButton = document.getElementById('toggleSidebar');
+            
+            toggleButton.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                if (sidebar.classList.contains('collapsed')) {
+                    content.style.marginLeft = '4rem';
+                } else {
+                    content.style.marginLeft = '0';
+                }
+            });
+            
+            // レスポンシブ対応
+            function handleResize() {
+                if (window.innerWidth < 768) {
+                    sidebar.classList.add('collapsed');
+                    content.style.marginLeft = '4rem';
+                } else {
+                    sidebar.classList.remove('collapsed');
+                    content.style.marginLeft = '0';
+                }
+            }
+            
+            window.addEventListener('resize', handleResize);
+            handleResize(); // 初期ロード時にも実行
+        });
+        
+        // 検索機能の初期化
+        initializeSearch();
+    });
+    
+    // 検索機能の実装
+    function initializeSearch() {
+        // 要素の取得
+        const searchInput = document.getElementById('searchInput');
+        const areaFilter = document.getElementById('areaFilter');
+        const searchButton = document.getElementById('searchButton');
+        const toggleAdvancedSearch = document.getElementById('toggleAdvancedSearch');
+        const advancedSearchPanel = document.getElementById('advancedSearchPanel');
+        const resetFilters = document.getElementById('resetFilters');
+        const applyFilters = document.getElementById('applyFilters');
+        const searchResultsCounter = document.getElementById('searchResultsCounter');
+        const resultsCount = document.getElementById('resultsCount');
+        
+        // 詳細検索パネルの表示/非表示
+        toggleAdvancedSearch.addEventListener('click', () => {
+            advancedSearchPanel.classList.toggle('hidden');
+        });
+        
+        // フィルターのリセット
+        resetFilters.addEventListener('click', () => {
+            // チェックボックスをリセット
+            document.querySelectorAll('.statusFilter, .shelfTypeFilter').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // 日付フィールドをリセット
+            document.getElementById('inDateStart').value = '';
+            document.getElementById('inDateEnd').value = '';
+        });
+        
+        // 検索の実行
+        searchButton.addEventListener('click', performSearch);
+        applyFilters.addEventListener('click', performSearch);
+        
+        // 検索処理
+        function performSearch() {
+            // 検索条件の取得
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedArea = areaFilter.value;
+            
+            // 詳細検索条件の取得
+            const selectedStatuses = Array.from(document.querySelectorAll('.statusFilter:checked')).map(cb => cb.value);
+            const selectedShelfTypes = Array.from(document.querySelectorAll('.shelfTypeFilter:checked')).map(cb => cb.value);
+            const inDateStart = document.getElementById('inDateStart').value;
+            const inDateEnd = document.getElementById('inDateEnd').value;
+            
+            // 検索結果をカウント
+            let matchCount = 0;
+            
+            // すべてのセルをリセット（ハイライトを解除）
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('search-highlight');
+                cell.style.opacity = '1';
+            });
+            
+            // 検索条件に合致するセルを検索
+            cells.forEach(cell => {
+                const cellElement = document.getElementById(`cell-${cell.x}-${cell.y}`);
+                if (!cellElement || cellElement.classList.contains('cell-aisle')) return;
+                
+                // 検索条件との照合
+                let matches = true;
+                
+                // 基本検索（テキスト）
+                if (searchTerm && !(
+                    (cell.itemId && cell.itemId.toLowerCase().includes(searchTerm)) ||
+                    (cell.itemName && cell.itemName.toLowerCase().includes(searchTerm)) ||
+                    (cell.customer && cell.customer.name && cell.customer.name.toLowerCase().includes(searchTerm))
+                )) {
+                    matches = false;
+                }
+                
+                // エリアフィルター
+                if (selectedArea && cell.area !== selectedArea) {
+                    matches = false;
+                }
+                
+                // 状態フィルター
+                if (selectedStatuses.length > 0 && !selectedStatuses.includes(cell.status)) {
+                    matches = false;
+                }
+                
+                // 保管タイプフィルター
+                if (selectedShelfTypes.length > 0 && !selectedShelfTypes.includes(cell.shelfType)) {
+                    matches = false;
+                }
+                
+                // 日付フィルター
+                if (inDateStart && cell.inDate && new Date(cell.inDate) < new Date(inDateStart)) {
+                    matches = false;
+                }
+                if (inDateEnd && cell.inDate && new Date(cell.inDate) > new Date(inDateEnd)) {
+                    matches = false;
+                }
+                
+                // 検索結果の表示
+                if (matches) {
+                    cellElement.classList.add('search-highlight');
+                    cellElement.style.opacity = '1';
+                    matchCount++;
+                } else {
+                    cellElement.style.opacity = '0.3';
+                }
+            });
+            
+            // 検索結果カウンターの表示
+            searchResultsCounter.classList.remove('hidden');
+            resultsCount.textContent = matchCount;
+        }
+    }
+    </script>
+</body>
+</html>

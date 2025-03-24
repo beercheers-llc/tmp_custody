@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金型管理システム - 出庫依頼</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex flex-col">
+        <!-- ヘッダー -->
+        <header class="bg-white shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="customer-dashboard.html" class="text-xl font-bold text-gray-800">金型管理システム</a>
+                </div>
+                <div class="flex items-center">
+                    <span class="mr-4 text-gray-600">株式会社山田製作所 様</span>
+                    <a href="login.html" class="text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-sign-out-alt"></i> ログアウト
+                    </a>
+                </div>
+            </div>
+        </header>
+        
+        <!-- メインコンテンツ -->
+        <main class="flex-grow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <!-- ページタイトル -->
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">出庫依頼</h2>
+                    <p class="text-gray-600">物品の出庫を依頼します</p>
+                </div>
+                
+                <!-- 出庫依頼フォーム -->
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <form>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- 物品選択 -->
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800 mb-4">物品選択</h3>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="item-select">
+                                        出庫する物品
+                                    </label>
+                                    <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="item-select">
+                                        <option value="">物品を選択してください</option>
+                                        <option value="CUS-2025-0001">CUS-2025-0001 (200×150×300cm)</option>
+                                        <option value="CUS-2025-0002">CUS-2025-0002 (150×120×200cm)</option>
+                                        <option value="CUS-2025-0003">CUS-2025-0003 (300×200×400cm)</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- 選択した物品の情報 -->
+                                <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                                    <h4 class="font-semibold text-gray-700 mb-2">選択した物品の情報</h4>
+                                    <div class="grid grid-cols-2 gap-2 text-sm">
+                                        <div class="text-gray-600">管理番号:</div>
+                                        <div class="font-medium">CUS-2025-0001</div>
+                                        
+                                        <div class="text-gray-600">物品サイズ:</div>
+                                        <div class="font-medium">200×150×300cm</div>
+                                        
+                                        <div class="text-gray-600">数量:</div>
+                                        <div class="font-medium">1</div>
+                                        
+                                        <div class="text-gray-600">預かり開始日:</div>
+                                        <div class="font-medium">2025/01/15</div>
+                                        
+                                        <div class="text-gray-600">預かり終了予定日:</div>
+                                        <div class="font-medium">2025/03/15</div>
+                                        
+                                        <div class="text-gray-600">保管場所:</div>
+                                        <div class="font-medium">Aエリア-01</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="outgoing-date">
+                                        希望出庫日 <span class="text-red-500">*</span>
+                                    </label>
+                                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="outgoing-date" type="date" required>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="outgoing-time">
+                                        希望時間帯 <span class="text-red-500">*</span>
+                                    </label>
+                                    <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="outgoing-time" required>
+                                        <option value="">時間帯を選択してください</option>
+                                        <option value="morning">午前 (9:00-12:00)</option>
+                                        <option value="afternoon">午後 (13:00-17:00)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- 配送情報 -->
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800 mb-4">配送情報</h3>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                                        配送方法 <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="flex items-center mb-2">
+                                        <input id="delivery-customer" name="delivery-method" type="radio" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" checked>
+                                        <label for="delivery-customer" class="ml-2 block text-sm text-gray-900">
+                                            自社で手配
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input id="delivery-warehouse" name="delivery-method" type="radio" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                        <label for="delivery-warehouse" class="ml-2 block text-sm text-gray-900">
+                                            倉庫側に手配を依頼
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div id="customer-delivery-section">
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 text-sm font-bold mb-2" for="transport-company">
+                                            運送会社名 <span class="text-red-500">*</span>
+                                        </label>
+                                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="transport-company" type="text" placeholder="運送会社名" required>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 text-sm font-bold mb-2" for="driver-contact">
+                                            ドライバー連絡先
+                                        </label>
+                                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="driver-contact" type="tel" placeholder="ドライバー連絡先">
+                                    </div>
+                                </div>
+                                
+                                <div id="warehouse-delivery-section" class="hidden">
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 text-sm font-bold mb-2" for="delivery-address">
+                                            配送先住所 <span class="text-red-500">*</span>
+                                        </label>
+                                        <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="delivery-address" rows="3" placeholder="配送先住所"></textarea>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 text-sm font-bold mb-2" for="delivery-contact">
+                                            配送先連絡先 <span class="text-red-500">*</span>
+                                        </label>
+                                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="delivery-contact" type="tel" placeholder="配送先連絡先">
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="notes">
+                                        備考
+                                    </label>
+                                    <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="notes" rows="3" placeholder="備考（特記事項があればご記入ください）"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 注意事項 -->
+                        <div class="mt-6 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                            <h3 class="text-md font-bold text-yellow-800 mb-2">注意事項</h3>
+                            <ul class="list-disc pl-5 text-sm text-yellow-700 space-y-1">
+                                <li>出庫依頼は3営業日前までにお願いいたします。</li>
+                                <li>出庫時間は、午前9時から午後5時までとなります。</li>
+                                <li>トラックの手配は、原則としてお客様にてお願いいたします。</li>
+                                <li>当社での配送手配をご希望の場合は、別途料金が発生します。</li>
+                                <li>出庫依頼後のキャンセルは、前日17時までにご連絡ください。</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- 操作ボタン -->
+                        <div class="mt-8 flex justify-end space-x-4">
+                            <a href="customer-dashboard.html" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                                キャンセル
+                            </a>
+                            <a href="customer-outgoing-confirm.html" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                                依頼を確定
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+        
+        <!-- フッター -->
+        <footer class="bg-white shadow-inner py-4">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <p class="text-center text-gray-500 text-sm">
+                    &copy; 2025 金型管理システム - 大型・重量物の預かり・管理システム
+                </p>
+            </div>
+        </footer>
+    </div>
+    
+    <script>
+        // 配送方法の切り替え
+        document.getElementById('delivery-customer').addEventListener('change', function() {
+            document.getElementById('customer-delivery-section').classList.remove('hidden');
+            document.getElementById('warehouse-delivery-section').classList.add('hidden');
+        });
+        
+        document.getElementById('delivery-warehouse').addEventListener('change', function() {
+            document.getElementById('customer-delivery-section').classList.add('hidden');
+            document.getElementById('warehouse-delivery-section').classList.remove('hidden');
+        });
+    </script>
+</body>
+</html>

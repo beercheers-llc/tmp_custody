@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金型管理システム - 物品一覧</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .sidebar {
+            transition: width 0.3s ease;
+        }
+        .sidebar.collapsed {
+            width: 4rem;
+        }
+        .sidebar.collapsed .menu-text {
+            display: none;
+        }
+        .sidebar.collapsed .menu-title {
+            display: none;
+        }
+        .content-wrapper {
+            transition: margin-left 0.3s ease;
+        }
+        /* 管理者テーマカラー */
+        .admin-theme {
+            --primary-color: #059669; /* 緑 */
+            --primary-hover: #047857; /* 濃い緑 */
+            --secondary-bg: #ecfdf5; /* 薄い緑 */
+            --accent-color: #10b981; /* 明るい緑 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 admin-theme">
+    <div class="min-h-screen flex flex-col">
+        <!-- ヘッダー -->
+        <header class="bg-green-600 shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-white">金型管理システム</h1>
+                </div>
+                <div class="flex items-center">
+                    <span class="mr-4 text-white">管理者様</span>
+                    <a href="login.html" class="text-white hover:text-green-200">
+                        <i class="fas fa-sign-out-alt"></i> ログアウト
+                    </a>
+                </div>
+            </div>
+        </header>
+        
+        <!-- メインコンテンツ -->
+        <main class="flex-grow flex">
+            <!-- サイドバー -->
+            <div id="sidebar" class="sidebar bg-green-800 shadow-md w-64">
+                <div class="p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-white menu-title">メニュー</h3>
+                        <button id="toggleSidebar" class="text-white hover:text-green-200 focus:outline-none">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="dashboard.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-home w-6"></i>
+                                <span class="menu-text">ダッシュボード</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="items-list.html" class="flex items-center p-2 text-white bg-green-700 rounded">
+                                <i class="fas fa-box w-6"></i>
+                                <span class="menu-text">物品管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="warehouse-map.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-warehouse w-6"></i>
+                                <span class="menu-text">保管場所管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="incoming-list.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-arrow-right-to-bracket w-6"></i>
+                                <span class="menu-text">入庫管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="outgoing-list.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-arrow-right-from-bracket w-6"></i>
+                                <span class="menu-text">出庫管理</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- メインコンテンツエリア -->
+            <div id="content" class="content-wrapper flex-1">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <!-- ページタイトル -->
+                <div class="mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">物品一覧</h2>
+                        <p class="text-gray-600">登録されている物品の一覧を表示します</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <a href="item-register.html" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            <i class="fas fa-plus mr-2"></i> 新規登録
+                        </a>
+                        <a href="csv-import.html" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                            <i class="fas fa-file-import mr-2"></i> CSVインポート
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- 検索フィルター -->
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">検索条件</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="management-number">
+                                管理番号
+                            </label>
+                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="management-number" type="text" placeholder="管理番号を入力">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="owner">
+                                所有者
+                            </label>
+                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="owner" type="text" placeholder="所有者名を入力">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="storage-area">
+                                保管場所
+                            </label>
+                            <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="storage-area">
+                                <option value="">すべて</option>
+                                <option value="A">Aエリア</option>
+                                <option value="B">Bエリア</option>
+                                <option value="C">Cエリア</option>
+                                <option value="D">Dエリア</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="start-date">
+                                預かり開始日
+                            </label>
+                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="start-date" type="date">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="end-date">
+                                預かり終了日
+                            </label>
+                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="end-date" type="date">
+                        </div>
+                        <div class="flex items-end">
+                            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">
+                                <i class="fas fa-search mr-2"></i> 検索
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 物品一覧テーブル -->
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    管理番号
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    物品サイズ
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    数量
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    預かり期間
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    保管場所
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    所有者
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    操作
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <!-- サンプルデータ行 -->
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <a href="item-detail.html?id=CUS-2025-0001" class="text-blue-500 hover:text-blue-700">
+                                        CUS-2025-0001
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    200×150×300cm
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    1
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    2025/01/15 - 2025/03/15
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    Aエリア-01
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    株式会社山田製作所
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <a href="item-detail.html?id=CUS-2025-0001" class="text-blue-500 hover:text-blue-700 mr-3">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="item-edit.html?id=CUS-2025-0001" class="text-yellow-500 hover:text-yellow-700 mr-3">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="outgoing-process.html?id=CUS-2025-0001" class="text-green-500 hover:text-green-700">
+                                        <i class="fas fa-arrow-right-from-bracket"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <a href="item-detail.html?id=CUS-2025-0002" class="text-blue-500 hover:text-blue-700">
+                                        CUS-2025-0002
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    150×120×200cm
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    2
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    2025/01/20 - 2025/04/20
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    Bエリア-03
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    鈴木金属工業株式会社
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <a href="item-detail.html?id=CUS-2025-0002" class="text-blue-500 hover:text-blue-700 mr-3">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="item-edit.html?id=CUS-2025-0002" class="text-yellow-500 hover:text-yellow-700 mr-3">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="outgoing-process.html?id=CUS-2025-0002" class="text-green-500 hover:text-green-700">
+                                        <i class="fas fa-arrow-right-from-bracket"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <a href="item-detail.html?id=CUS-2025-0003" class="text-blue-500 hover:text-blue-700">
+                                        CUS-2025-0003
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    300×200×400cm
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    1
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    2025/02/01 - 2025/05/01
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    Cエリア-02
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    佐藤建設株式会社
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <a href="item-detail.html?id=CUS-2025-0003" class="text-blue-500 hover:text-blue-700 mr-3">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="item-edit.html?id=CUS-2025-0003" class="text-yellow-500 hover:text-yellow-700 mr-3">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="outgoing-process.html?id=CUS-2025-0003" class="text-green-500 hover:text-green-700">
+                                        <i class="fas fa-arrow-right-from-bracket"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <!-- ページネーション -->
+                    <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                        <div class="flex-1 flex justify-between sm:hidden">
+                            <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                前へ
+                            </a>
+                            <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                次へ
+                            </a>
+                        </div>
+                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <div>
+                                <p class="text-sm text-gray-700">
+                                    全<span class="font-medium">97</span>件中 
+                                    <span class="font-medium">1</span>から
+                                    <span class="font-medium">10</span>件を表示
+                                </p>
+                            </div>
+                            <div>
+                                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                    <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                        <span class="sr-only">前へ</span>
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                    <a href="#" aria-current="page" class="z-10 bg-blue-50 border-blue-500 text-blue-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                        1
+                                    </a>
+                                    <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                        2
+                                    </a>
+                                    <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                        3
+                                    </a>
+                                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                        ...
+                                    </span>
+                                    <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                        10
+                                    </a>
+                                    <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                        <span class="sr-only">次へ</span>
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- フッター -->
+        <footer class="bg-green-50 shadow-inner py-4">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <p class="text-center text-gray-600">
+                    &copy; 2025 金型管理システム All Rights Reserved.
+                </p>
+            </div>
+        </footer>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            const toggleSidebar = document.getElementById('toggleSidebar');
+            
+            toggleSidebar.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                if (sidebar.classList.contains('collapsed')) {
+                    content.style.marginLeft = '4rem';
+                } else {
+                    content.style.marginLeft = '0';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
