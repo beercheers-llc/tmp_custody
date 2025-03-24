@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物品詳細 - 金型管理システム</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .sidebar {
+            transition: width 0.3s ease;
+        }
+        .sidebar.collapsed {
+            width: 4rem;
+        }
+        .sidebar.collapsed .menu-text {
+            display: none;
+        }
+        .sidebar.collapsed .menu-title {
+            display: none;
+        }
+        .content-wrapper {
+            transition: margin-left 0.3s ease;
+        }
+        /* 管理者テーマカラー */
+        .admin-theme {
+            --primary-color: #059669; /* 緑 */
+            --primary-hover: #047857; /* 濃い緑 */
+            --secondary-bg: #ecfdf5; /* 薄い緑 */
+            --accent-color: #10b981; /* 明るい緑 */
+        }
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #e5e7eb;
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2rem;
+            top: 0.25rem;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background-color: #10b981;
+        }
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 admin-theme">
+    <div class="min-h-screen flex flex-col">
+        <!-- ヘッダー -->
+        <header class="bg-green-600 shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-white">金型管理システム</h1>
+                </div>
+                <div class="flex items-center">
+                    <span class="mr-4 text-white">管理者様</span>
+                    <a href="login.html" class="text-white hover:text-green-200">
+                        <i class="fas fa-sign-out-alt"></i> ログアウト
+                    </a>
+                </div>
+            </div>
+        </header>
+        
+        <!-- メインコンテンツ -->
+        <main class="flex-grow flex">
+            <!-- サイドバー -->
+            <div id="sidebar" class="sidebar bg-green-800 shadow-md w-64">
+                <div class="p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-white menu-title">メニュー</h3>
+                        <button id="toggleSidebar" class="text-white hover:text-green-200 focus:outline-none">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="dashboard.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-home w-6"></i>
+                                <span class="menu-text">ダッシュボード</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="items-list.html" class="flex items-center p-2 text-white bg-green-700 rounded">
+                                <i class="fas fa-box w-6"></i>
+                                <span class="menu-text">物品管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="warehouse-map.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-warehouse w-6"></i>
+                                <span class="menu-text">保管場所管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="incoming-list.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-arrow-right-to-bracket w-6"></i>
+                                <span class="menu-text">入庫管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="outgoing-list.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-arrow-right-from-bracket w-6"></i>
+                                <span class="menu-text">出庫管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="users-list.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-users w-6"></i>
+                                <span class="menu-text">ユーザー管理</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- メインコンテンツエリア -->
+            <div id="content" class="content-wrapper flex-1">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <!-- ページタイトルと戻るボタン -->
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">物品詳細</h2>
+                            <p class="text-gray-600">管理番号: <span id="item-id">ITM-2025-0001</span></p>
+                        </div>
+                        <a href="items-list.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200">
+                            <i class="fas fa-arrow-left mr-2"></i> 一覧に戻る
+                        </a>
+                    </div>
+                    
+                    <!-- 物品詳細情報 -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-green-50">
+                            <h3 class="text-lg font-bold text-gray-800">基本情報</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <dl>
+                                        <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 rounded-t-lg">
+                                            <dt class="text-sm font-medium text-gray-500">物品名</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">大型金型A</dd>
+                                        </div>
+                                        <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                            <dt class="text-sm font-medium text-gray-500">物品サイズ</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">300×200×400cm</dd>
+                                        </div>
+                                        <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                            <dt class="text-sm font-medium text-gray-500">重量</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">800kg</dd>
+                                        </div>
+                                        <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                            <dt class="text-sm font-medium text-gray-500">数量</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">1</dd>
+                                        </div>
+                                        <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 rounded-b-lg">
+                                            <dt class="text-sm font-medium text-gray-500">備考</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">自動車部品用金型、クレーン必須</dd>
+                                        </div>
+                                    </dl>
+                                </div>
+                                <div>
+                                    <dl>
+                                        <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 rounded-t-lg">
+                                            <dt class="text-sm font-medium text-gray-500">保管場所</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">Aエリア-05</dd>
+                                        </div>
+                                        <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                            <dt class="text-sm font-medium text-gray-500">状態</dt>
+                                            <dd class="mt-1 sm:mt-0 sm:col-span-2">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                    出庫予定
+                                                </span>
+                                            </dd>
+                                        </div>
+                                        <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                            <dt class="text-sm font-medium text-gray-500">預かり開始日</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">2025/02/01</dd>
+                                        </div>
+                                        <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                            <dt class="text-sm font-medium text-gray-500">預かり終了予定日</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">2025/05/01</dd>
+                                        </div>
+                                        <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 rounded-b-lg">
+                                            <dt class="text-sm font-medium text-gray-500">保管料金</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">¥25,000/月</dd>
+                                        </div>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 顧客情報 -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-green-50">
+                            <h3 class="text-lg font-bold text-gray-800">顧客情報</h3>
+                        </div>
+                        <div class="p-6">
+                            <dl>
+                                <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 rounded-t-lg">
+                                    <dt class="text-sm font-medium text-gray-500">顧客名</dt>
+                                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">株式会社山田製作所</dd>
+                                </div>
+                                <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt class="text-sm font-medium text-gray-500">担当者名</dt>
+                                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">山田太郎</dd>
+                                </div>
+                                <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt class="text-sm font-medium text-gray-500">電話番号</dt>
+                                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">03-1234-5678</dd>
+                                </div>
+                                <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt class="text-sm font-medium text-gray-500">メールアドレス</dt>
+                                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">yamada@example.com</dd>
+                                </div>
+                                <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 rounded-b-lg">
+                                    <dt class="text-sm font-medium text-gray-500">住所</dt>
+                                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">東京都千代田区〇〇町1-2-3</dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+                    
+                    <!-- アクションボタン -->
+                    <div class="flex flex-wrap gap-4 mb-6">
+                        <a href="item-register.html?id=ITM-2025-0001" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                            <i class="fas fa-edit mr-2"></i> 編集
+                        </a>
+                        <a href="outgoing-list.html?id=ITM-2025-0001" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                            <i class="fas fa-arrow-right-from-bracket mr-2"></i> 出庫処理
+                        </a>
+                        <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200">
+                            <i class="fas fa-print mr-2"></i> 詳細情報を印刷
+                        </button>
+                        <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200">
+                            <i class="fas fa-qrcode mr-2"></i> QRコード生成
+                        </button>
+                    </div>
+                    
+                    <!-- タブナビゲーション -->
+                    <div class="border-b border-gray-200 mb-6">
+                        <nav class="-mb-px flex space-x-8">
+                            <a href="#" class="border-green-500 text-green-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" aria-current="page">
+                                履歴
+                            </a>
+                            <a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                写真
+                            </a>
+                            <a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                関連書類
+                            </a>
+                            <a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                メモ
+                            </a>
+                        </nav>
+                    </div>
+                    
+                    <!-- 履歴タイムライン -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">物品履歴</h3>
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="mb-1 text-sm font-semibold text-gray-900">2025/03/20 14:30</div>
+                                <div class="text-sm text-gray-800">出庫予約受付</div>
+                                <div class="mt-1 text-xs text-gray-500">担当者: 佐藤</div>
+                                <div class="mt-1 text-xs text-gray-500">出庫予定日: 2025/04/01</div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="mb-1 text-sm font-semibold text-gray-900">2025/02/01 10:15</div>
+                                <div class="text-sm text-gray-800">入庫完了</div>
+                                <div class="mt-1 text-xs text-gray-500">担当者: 高橋</div>
+                                <div class="mt-1 text-xs text-gray-500">保管場所: Aエリア-05</div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="mb-1 text-sm font-semibold text-gray-900">2025/01/30 15:45</div>
+                                <div class="text-sm text-gray-800">入庫予約受付</div>
+                                <div class="mt-1 text-xs text-gray-500">担当者: 田中</div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="mb-1 text-sm font-semibold text-gray-900">2025/01/25 11:20</div>
+                                <div class="text-sm text-gray-800">契約締結</div>
+                                <div class="mt-1 text-xs text-gray-500">担当者: 鈴木</div>
+                                <div class="mt-1 text-xs text-gray-500">契約期間: 2025/02/01 〜 2025/05/01</div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="mb-1 text-sm font-semibold text-gray-900">2025/01/20 13:10</div>
+                                <div class="text-sm text-gray-800">見積書発行</div>
+                                <div class="mt-1 text-xs text-gray-500">担当者: 鈴木</div>
+                                <div class="mt-1 text-xs text-gray-500">見積番号: EST-2025-0015</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- フッター -->
+        <footer class="bg-gray-800 text-white py-4">
+            <div class="container mx-auto px-4 text-center">
+                <p>&copy; 2025 金型管理システム All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            const toggleButton = document.getElementById('toggleSidebar');
+            
+            toggleButton.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                if (sidebar.classList.contains('collapsed')) {
+                    content.style.marginLeft = '4rem';
+                } else {
+                    content.style.marginLeft = '';
+                }
+            });
+            
+            // URLパラメータから物品IDを取得して表示
+            const urlParams = new URLSearchParams(window.location.search);
+            const itemId = urlParams.get('id');
+            if (itemId) {
+                document.getElementById('item-id').textContent = itemId;
+            }
+        });
+    </script>
+</body>
+</html>

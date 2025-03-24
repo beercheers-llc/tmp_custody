@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倉庫詳細 - 金型管理システム</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .sidebar {
+            transition: width 0.3s ease;
+        }
+        .sidebar.collapsed {
+            width: 4rem;
+        }
+        .sidebar.collapsed .menu-text {
+            display: none;
+        }
+        .sidebar.collapsed .menu-title {
+            display: none;
+        }
+        .content-wrapper {
+            transition: margin-left 0.3s ease;
+        }
+        /* 管理者テーマカラー */
+        .admin-theme {
+            --primary-color: #059669; /* 緑 */
+            --primary-hover: #047857; /* 濃い緑 */
+            --secondary-bg: #ecfdf5; /* 薄い緑 */
+            --accent-color: #10b981; /* 明るい緑 */
+        }
+        /* 立面図のスタイル */
+        .shelf-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+        }
+        .shelf-cell {
+            aspect-ratio: 1;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            position: relative;
+        }
+        .shelf-cell.empty {
+            background-color: #f3f4f6;
+        }
+        .shelf-cell.occupied {
+            background-color: #bfdbfe;
+        }
+        .shelf-cell.incoming {
+            background-color: #bbf7d0;
+        }
+        .shelf-cell.outgoing {
+            background-color: #fecaca;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 1rem;
+        }
+        .legend-color {
+            width: 1rem;
+            height: 1rem;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 admin-theme">
+    <div class="min-h-screen flex flex-col">
+        <!-- ヘッダー -->
+        <header class="bg-green-600 shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-white">金型管理システム</h1>
+                </div>
+                <div class="flex items-center">
+                    <span class="mr-4 text-white">管理者様</span>
+                    <a href="login.html" class="text-white hover:text-green-200">
+                        <i class="fas fa-sign-out-alt"></i> ログアウト
+                    </a>
+                </div>
+            </div>
+        </header>
+        
+        <!-- メインコンテンツ -->
+        <main class="flex-grow flex">
+            <!-- サイドバー -->
+            <div id="sidebar" class="sidebar bg-green-800 shadow-md w-64">
+                <div class="p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-white menu-title">メニュー</h3>
+                        <button id="toggleSidebar" class="text-white hover:text-green-200 focus:outline-none">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="dashboard.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-home w-6"></i>
+                                <span class="menu-text">ダッシュボード</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="items-list.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-box w-6"></i>
+                                <span class="menu-text">物品管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="warehouse-map.html" class="flex items-center p-2 text-white bg-green-700 rounded">
+                                <i class="fas fa-warehouse w-6"></i>
+                                <span class="menu-text">保管場所管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="incoming-list.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-arrow-right-to-bracket w-6"></i>
+                                <span class="menu-text">入庫管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="outgoing-list.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-arrow-right-from-bracket w-6"></i>
+                                <span class="menu-text">出庫管理</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="users-list.html" class="flex items-center p-2 text-green-100 hover:bg-green-700 rounded">
+                                <i class="fas fa-users w-6"></i>
+                                <span class="menu-text">ユーザー管理</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- メインコンテンツエリア -->
+            <div id="content" class="content-wrapper flex-1">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <!-- ページタイトルと戻るボタン -->
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">倉庫詳細</h2>
+                            <p class="text-gray-600">エリア: <span id="area-id">Bエリア</span></p>
+                        </div>
+                        <a href="warehouse-map.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200">
+                            <i class="fas fa-arrow-left mr-2"></i> マップに戻る
+                        </a>
+                    </div>
+                    
+                    <!-- エリア情報 -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-green-50">
+                            <h3 class="text-lg font-bold text-gray-800">エリア情報</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <dl>
+                                        <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 rounded-t-lg">
+                                            <dt class="text-sm font-medium text-gray-500">エリア名</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">Bエリア</dd>
+                                        </div>
+                                        <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                            <dt class="text-sm font-medium text-gray-500">エリアタイプ</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">2階棚</dd>
+                                        </div>
+                                        <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                            <dt class="text-sm font-medium text-gray-500">総収容数</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">30スペース</dd>
+                                        </div>
+                                        <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 rounded-b-lg">
+                                            <dt class="text-sm font-medium text-gray-500">最大積載重量</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">1000kg/スペース</dd>
+                                        </div>
+                                    </dl>
+                                </div>
+                                <div>
+                                    <dl>
+                                        <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 rounded-t-lg">
+                                            <dt class="text-sm font-medium text-gray-500">使用中</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">18スペース</dd>
+                                        </div>
+                                        <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                            <dt class="text-sm font-medium text-gray-500">入庫予定</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">3スペース</dd>
+                                        </div>
+                                        <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                            <dt class="text-sm font-medium text-gray-500">出庫予定</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">2スペース</dd>
+                                        </div>
+                                        <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 rounded-b-lg">
+                                            <dt class="text-sm font-medium text-gray-500">空きスペース</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">9スペース</dd>
+                                        </div>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 立面図 -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-green-50">
+                            <h3 class="text-lg font-bold text-gray-800">立面図</h3>
+                        </div>
+                        <div class="p-6">
+                            <!-- タブナビゲーション -->
+                            <div class="border-b border-gray-200 mb-6">
+                                <nav class="-mb-px flex space-x-8">
+                                    <a href="#" class="border-green-500 text-green-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" aria-current="page">
+                                        1階
+                                    </a>
+                                    <a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                        2階
+                                    </a>
+                                </nav>
+                            </div>
+                            
+                            <!-- 凡例 -->
+                            <div class="flex flex-wrap mb-4">
+                                <div class="legend-item">
+                                    <div class="legend-color bg-gray-100 border border-gray-300"></div>
+                                    <span class="text-sm">空き</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color bg-blue-200 border border-blue-300"></div>
+                                    <span class="text-sm">使用中</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color bg-green-200 border border-green-300"></div>
+                                    <span class="text-sm">入庫予定</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color bg-red-200 border border-red-300"></div>
+                                    <span class="text-sm">出庫予定</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 棚の立面図 -->
+                            <div class="shelf-grid">
+                                <!-- 1行目 -->
+                                <div class="shelf-cell occupied" data-id="B-01">B-01</div>
+                                <div class="shelf-cell occupied" data-id="B-02">B-02</div>
+                                <div class="shelf-cell occupied" data-id="B-03">B-03</div>
+                                <div class="shelf-cell occupied" data-id="B-04">B-04</div>
+                                <div class="shelf-cell occupied" data-id="B-05">B-05</div>
+                                
+                                <!-- 2行目 -->
+                                <div class="shelf-cell occupied" data-id="B-06">B-06</div>
+                                <div class="shelf-cell outgoing" data-id="B-07">B-07</div>
+                                <div class="shelf-cell occupied" data-id="B-08">B-08</div>
+                                <div class="shelf-cell occupied" data-id="B-09">B-09</div>
+                                <div class="shelf-cell empty" data-id="B-10">B-10</div>
+                                
+                                <!-- 3行目 -->
+                                <div class="shelf-cell occupied" data-id="B-11">B-11</div>
+                                <div class="shelf-cell occupied" data-id="B-12">B-12</div>
+                                <div class="shelf-cell incoming" data-id="B-13">B-13</div>
+                                <div class="shelf-cell empty" data-id="B-14">B-14</div>
+                                <div class="shelf-cell empty" data-id="B-15">B-15</div>
+                                
+                                <!-- 4行目 -->
+                                <div class="shelf-cell occupied" data-id="B-16">B-16</div>
+                                <div class="shelf-cell occupied" data-id="B-17">B-17</div>
+                                <div class="shelf-cell occupied" data-id="B-18">B-18</div>
+                                <div class="shelf-cell incoming" data-id="B-19">B-19</div>
+                                <div class="shelf-cell empty" data-id="B-20">B-20</div>
+                                
+                                <!-- 5行目 -->
+                                <div class="shelf-cell occupied" data-id="B-21">B-21</div>
+                                <div class="shelf-cell outgoing" data-id="B-22">B-22</div>
+                                <div class="shelf-cell occupied" data-id="B-23">B-23</div>
+                                <div class="shelf-cell incoming" data-id="B-24">B-24</div>
+                                <div class="shelf-cell empty" data-id="B-25">B-25</div>
+                                
+                                <!-- 6行目 -->
+                                <div class="shelf-cell occupied" data-id="B-26">B-26</div>
+                                <div class="shelf-cell occupied" data-id="B-27">B-27</div>
+                                <div class="shelf-cell occupied" data-id="B-28">B-28</div>
+                                <div class="shelf-cell empty" data-id="B-29">B-29</div>
+                                <div class="shelf-cell empty" data-id="B-30">B-30</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 保管物品一覧 -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-green-50">
+                            <h3 class="text-lg font-bold text-gray-800">保管物品一覧</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                保管場所
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                物品管理番号
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                物品名
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                顧客名
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                入庫日
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                状態
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                操作
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">B-01</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <a href="item-detail.html?id=ITM-2025-0001" class="text-blue-500 hover:text-blue-700">
+                                                    ITM-2025-0001
+                                                </a>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">大型金型A</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">株式会社山田製作所</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">2025/02/01</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                    使用中
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <a href="item-detail.html?id=ITM-2025-0001" class="text-green-600 hover:text-green-900 mr-3">詳細</a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">B-07</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <a href="item-detail.html?id=ITM-2025-0008" class="text-blue-500 hover:text-blue-700">
+                                                    ITM-2025-0008
+                                                </a>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">中型金型B</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">株式会社鈴木工業</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">2025/01/15</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                    出庫予定
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <a href="item-detail.html?id=ITM-2025-0008" class="text-green-600 hover:text-green-900 mr-3">詳細</a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">B-13</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">-</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">小型金型セット</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">株式会社佐藤金属</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">2025/04/01</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                    入庫予定
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <a href="incoming-list.html" class="text-green-600 hover:text-green-900 mr-3">詳細</a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- フッター -->
+        <footer class="bg-gray-800 text-white py-4">
+            <div class="container mx-auto px-4 text-center">
+                <p>&copy; 2025 金型管理システム All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            const toggleButton = document.getElementById('toggleSidebar');
+            
+            toggleButton.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                if (sidebar.classList.contains('collapsed')) {
+                    content.style.marginLeft = '4rem';
+                } else {
+                    content.style.marginLeft = '';
+                }
+            });
+            
+            // URLパラメータからエリアIDを取得して表示
+            const urlParams = new URLSearchParams(window.location.search);
+            const areaId = urlParams.get('area');
+            if (areaId) {
+                document.getElementById('area-id').textContent = areaId;
+            }
+            
+            // 棚のセルをクリックしたときの処理
+            const shelfCells = document.querySelectorAll('.shelf-cell');
+            shelfCells.forEach(cell => {
+                cell.addEventListener('click', function() {
+                    const cellId = this.getAttribute('data-id');
+                    alert(`セル ${cellId} がクリックされました。\n実際の実装では、このセルの詳細情報をモーダルで表示します。`);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
