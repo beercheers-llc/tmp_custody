@@ -44,7 +44,7 @@ export interface Item {
   size_height?: number; // 高さ（cm）
   size_depth?: number; // 奥行き（cm）
   weight?: number; // 重量（kg）
-  status: 'in_storage' | 'shipped' | 'in_transit'; // 保管中、出荷済み、移動中
+  status: 'in_storage' | 'shipped' | 'in_transit' | 'scheduled'; // 保管中、出庫済み、移動中、出庫予定
   location_id?: string; // 現在の保管場所ID
   notes?: string;
   created_at: string;
