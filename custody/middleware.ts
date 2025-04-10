@@ -9,6 +9,11 @@ import type { NextRequest } from 'next/server';
  * 2. 認証済みユーザーがログインページにアクセスした場合はダッシュボードにリダイレクト
  */
 export async function middleware(req: NextRequest) {
+  // デモモード：認証チェックを無効化
+  // 本番環境では以下のコメントを外して認証を有効化してください
+  return NextResponse.next();
+
+  /*
   const res = NextResponse.next();
   const supabase = createMiddlewareClient({ req, res });
   
@@ -41,6 +46,7 @@ export async function middleware(req: NextRequest) {
   }
   
   return res;
+  */
 }
 
 // ミドルウェアを適用するパスを指定

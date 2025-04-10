@@ -1,6 +1,8 @@
+"use client";
+
 import React from 'react';
 import Link from 'next/link';
-import { cn } from '@/app/lib/utils/cn';
+import { cn } from '../../lib/utils/cn';
 
 // ヘッダーのプロパティ型定義
 interface HeaderProps {

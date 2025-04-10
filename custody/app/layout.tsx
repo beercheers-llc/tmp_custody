@@ -17,17 +17,21 @@ export const metadata: Metadata = {
   description: "入出庫プロセスを効率化する物品管理システム",
 };
 
+import { AuthProvider } from "./components/auth/AuthProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ja">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

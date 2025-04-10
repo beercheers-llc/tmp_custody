@@ -1,7 +1,9 @@
+"use client";
+
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cn } from '@/app/lib/utils/cn';
+import { cn } from '../../lib/utils/cn';
 
 // サイドバーのメニュー項目の型定義
 type MenuItem = {
@@ -76,7 +78,7 @@ export function Sidebar({ userRole = 'operator' }: SidebarProps) {
 
   return (
     <div className={cn(
-      "flex flex-col h-full bg-green-800 text-white transition-all duration-300",
+      "flex flex-col h-screen bg-green-800 text-white transition-all duration-300",
       collapsed ? "w-16" : "w-64"
     )}>
       <div className="flex items-center justify-between p-4 border-b border-green-700">
