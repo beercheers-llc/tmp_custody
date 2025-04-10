@@ -1,0 +1,35 @@
+system: 物品管理システム
+features:
+  photo_capture:
+    description: スマートフォンで物品の管理番号が写った写真を撮影
+    includes_gps: true
+  ocr_processing:
+    description: 画像から管理番号をOCRで抽出
+    technology_examples:
+    - Google Cloud Vision API
+  location_matching:
+    description: GPS座標から保管場所を自動判定
+    matching_method: 緯度・経度と保管場所マスタの照合（半径指定）
+  data_registration:
+    description: 抽出した管理番号と判定された保管場所をデータベースに登録
+components:
+  frontend:
+    type:
+    - PWA
+    functions:
+    - 写真撮影
+    - 位置情報取得
+    - サーバー送信
+  backend:
+    language_examples:
+    - Laravel
+    - Node.js
+    - FastAPI
+    database:
+    - PostgreSQL
+    - MySQL
+    optional_extensions:
+    - PostGIS（位置情報管理）
+notes:
+- GPSの精度は屋内で低下する可能性あり。必要に応じてQRコードなどの代替手段を検討。
+- スマホの位置情報取得にはユーザーの権限許可が必要。
