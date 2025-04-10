@@ -26,17 +26,22 @@ type SelectedCell = CellData | null;
 // 倉庫グリッドコンポーネントのプロパティ
 interface WarehouseGridProps {
   onCellSelect: (cell: CellData | null) => void;
+  warehouseId?: string; // 倉庫ID
 }
 
-export function WarehouseGrid({ onCellSelect }: WarehouseGridProps) {
+export function WarehouseGrid({ onCellSelect, warehouseId }: WarehouseGridProps) {
   const [cells, setCells] = useState<CellData[]>([]);
   const [selectedCell, setSelectedCell] = useState<SelectedCell>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedArea, setSelectedArea] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [outDate, setOutDate] = useState('');
 
   // 初期データのロード（実際のアプリではAPIから取得）
   useEffect(() => {
+    // 倉庫IDが変更された場合にデータを再取得
+    // 実際のアプリでは、warehouseIdに基づいてAPIからデータを取得する
+    // 倉庫IDが変更された場合にデータを再取得
+    // 実際のアプリでは、warehouseIdに基づいてAPIからデータを取得する
     // サンプルデータの生成
     const sampleCells: CellData[] = [];
     
@@ -120,7 +125,7 @@ export function WarehouseGrid({ onCellSelect }: WarehouseGridProps) {
     }
     
     setCells(sampleCells);
-  }, []);
+  }, [warehouseId]); // warehouseIdが変更されたときに再取得
 
   // セルをクリックした時の処理
   const handleCellClick = (cell: CellData) => {
@@ -141,13 +146,13 @@ export function WarehouseGrid({ onCellSelect }: WarehouseGridProps) {
         return false;
       }
       
-      // エリアフィルター
-      if (selectedArea && cell.area !== selectedArea) {
+      // 状態フィルター
+      if (selectedStatus && cell.status !== selectedStatus) {
         return false;
       }
       
-      // 状態フィルター
-      if (selectedStatus && cell.status !== selectedStatus) {
+      // 出庫予定日フィルター
+      if (outDate && cell.outDate !== outDate) {
         return false;
       }
       
@@ -180,23 +185,6 @@ export function WarehouseGrid({ onCellSelect }: WarehouseGridProps) {
             />
           </div>
           <div>
-            <label htmlFor="area" className="block text-sm font-medium text-gray-700 mb-1">
-              エリア
-            </label>
-            <select
-              id="area"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
-              value={selectedArea}
-              onChange={(e) => setSelectedArea(e.target.value)}
-            >
-              <option value="">全てのエリア</option>
-              <option value="A">エリアA</option>
-              <option value="B">エリアB</option>
-              <option value="C">エリアC</option>
-              <option value="D">エリアD</option>
-            </select>
-          </div>
-          <div>
             <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
               状態
             </label>
@@ -212,6 +200,18 @@ export function WarehouseGrid({ onCellSelect }: WarehouseGridProps) {
               <option value="scheduled-in">入庫予定</option>
               <option value="scheduled-out">出庫予定</option>
             </select>
+          </div>
+          <div>
+            <label htmlFor="outDate" className="block text-sm font-medium text-gray-700 mb-1">
+              出庫予定日
+            </label>
+            <input
+              type="date"
+              id="outDate"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+              value={outDate}
+              onChange={(e) => setOutDate(e.target.value)}
+            />
           </div>
         </div>
         <div className="mt-4 flex justify-end">
